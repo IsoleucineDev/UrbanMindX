@@ -1,14 +1,10 @@
 # ============================================================
 # trafico_api.py — Persona 1
 # Capa de abstracción sobre TraCI.
-# Las otras personas usan esta clase, nunca TraCI directo.
 # ============================================================
 
 import os
 import sys
-import traci
-import sumolib
-from entrenamiento.config import SUMO_CONFIG, PUERTO_SUMO, PASO_SIMULACION
 
 # SUMO_HOME debe estar definido como variable de entorno
 if "SUMO_HOME" not in os.environ:
@@ -18,6 +14,10 @@ if "SUMO_HOME" not in os.environ:
     )
 
 sys.path.append(os.path.join(os.environ["SUMO_HOME"], "tools"))
+
+import traci
+import sumolib
+from entrenamiento.config import SUMO_CONFIG, PUERTO_SUMO, PASO_SIMULACION
 
 # IDs de los elementos en SUMO (deben coincidir con los archivos .xml)
 EDGES = {
@@ -35,12 +35,12 @@ class SimulacionTrafico:
     Persona 1 es responsable de mantener esta clase.
 
     Uso básico:
-        sim = SimulacionTrafico()
-        sim.iniciar()
-        estado = sim.get_estado_interseccion()
-        sim.set_fase_semaforo(1)
-        sim.avanzar_paso()
-        sim.cerrar()
+    sim = SimulacionTrafico()
+    sim.iniciar()
+    estado = sim.get_estado_interseccion()
+    sim.set_fase_semaforo(1)
+    sim.avanzar_paso()
+    sim.cerrar()
     """
 
     def __init__(self, config_path: str = SUMO_CONFIG, gui: bool = False):
