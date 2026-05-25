@@ -18,14 +18,15 @@ import subprocess
 def entrenar():
     print("Iniciando entrenamiento UrbanMind X...")
 
-    # Usar mock mientras SUMO no esté listo,
-    # cambiar a SimulacionTrafico() cuando esté configurado
-    from simulacion.mock_simulacion import SimulacionMock
-    from entornos.entorno_semaforo  import EntornoSemaforo
-    from entornos.entorno_vehiculo  import EntornoVehiculo
-    from entrenamiento.pipeline     import PipelineUrbanMind
+    # Cambiado: usar SUMO real (TraCI) en vez de mock
+    from simulacion.trafico_api import SimulacionTrafico
+    from entornos.entorno_semaforo import EntornoSemaforo
+    from entornos.entorno_vehiculo import EntornoVehiculo
+    from entrenamiento.pipeline import PipelineUrbanMind
 
-    sim   = SimulacionMock()
+    sim = SimulacionTrafico(gui=False)
+    sim.iniciar()
+
     env_s = EntornoSemaforo(sim, modo_recompensa="simple")
     env_v = EntornoVehiculo(sim, modo_recompensa="simple")
 
@@ -34,23 +35,29 @@ def entrenar():
     pipeline.etapa_2_vehiculos(env_v)
     pipeline.etapa_3_conjunto(env_s, env_v)
 
+    sim.cerrar()
     print("\n✓ Entrenamiento completo. Modelos guardados en /modelos")
 
 
 def evaluar():
     print("Evaluando escenarios...")
 
-    from simulacion.mock_simulacion import SimulacionMock
-    from entornos.entorno_semaforo  import EntornoSemaforo
-    from entornos.entorno_vehiculo  import EntornoVehiculo
-    from entrenamiento.evaluador    import Evaluador
+    # Cambiado: usar SUMO real (TraCI) en vez de mock
+    from simulacion.trafico_api import SimulacionTrafico
+    from entornos.entorno_semaforo import EntornoSemaforo
+    from entornos.entorno_vehiculo import EntornoVehiculo
+    from entrenamiento.evaluador import Evaluador
 
-    sim   = SimulacionMock()
+    sim = SimulacionTrafico(gui=False)
+    sim.iniciar()
+
     env_s = EntornoSemaforo(sim)
     env_v = EntornoVehiculo(sim)
 
     evaluador = Evaluador(sim, env_s, env_v, episodios=5)
     evaluador.correr_todos()
+
+    sim.cerrar()
 
 
 def dashboard():
@@ -60,12 +67,12 @@ def dashboard():
 
 def demo():
     """Demo con SUMO visual — requiere SUMO instalado."""
-    from simulacion.trafico_api    import SimulacionTrafico
+    from simulacion.trafico_api import SimulacionTrafico
     from entornos.entorno_semaforo import EntornoSemaforo
     from entornos.entorno_vehiculo import EntornoVehiculo
-    from stable_baselines3         import PPO
+    from stable_baselines3 import PPO
 
-    sim   = SimulacionTrafico(gui=True)
+    sim = SimulacionTrafico(gui=True)
     env_s = EntornoSemaforo(sim)
     env_v = EntornoVehiculo(sim)
 
@@ -89,13 +96,19 @@ def demo():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="UrbanMind X")
-    parser.add_argument("--modo",
-                        choices=["entrenar", "evaluar", "dashboard", "demo"],
-                        default="entrenar",
-                        help="Qué ejecutar")
+    parser.add_argument(
+        "--modo",
+        choices=["entrenar", "evaluar", "dashboard", "demo"],
+        default="entrenar",
+        help="Qué ejecutar",
+    )
     args = parser.parse_args()
 
-    if   args.modo == "entrenar":  entrenar()
-    elif args.modo == "evaluar":   evaluar()
-    elif args.modo == "dashboard": dashboard()
-    elif args.modo == "demo":      demo()
+    if args.modo == "entrenar":
+        entrenar()
+    elif args.modo == "evaluar":
+        evaluar()
+    elif args.modo == "dashboard":
+        dashboard()
+    elif args.modo == "demo":
+        demo()
