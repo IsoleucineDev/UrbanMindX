@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     desbalanceado.rou.xml — Persona 1
-    Avenida Norte-Sur con 3x más tráfico que Este-Oeste.
-    Prueba si el semáforo prioriza correctamente.
+    Norte-Sur con más tráfico que Este-Oeste.
+    Compatible con edges: norte_entrada/sur_salida/etc.
 -->
 <routes>
     <vType id="auto_normal"   accel="2.6" decel="4.5" sigma="0.5"
@@ -11,7 +11,7 @@
            length="5" minGap="2.5" maxSpeed="13.89" guiShape="passenger"
            color="0,0,255"/>
 
-    <!-- Norte-Sur: tráfico ALTO -->
+    <!-- Norte-Sur: ALTO -->
     <flow id="flujo_N_S" type="auto_normal"
           from="norte_entrada" to="sur_salida"
           begin="0" end="3600" vehsPerHour="600"/>
@@ -19,7 +19,7 @@
           from="sur_entrada" to="norte_salida"
           begin="0" end="3600" vehsPerHour="600"/>
 
-    <!-- Este-Oeste: tráfico BAJO -->
+    <!-- Este-Oeste: BAJO -->
     <flow id="flujo_E_O" type="auto_normal"
           from="este_entrada" to="oeste_salida"
           begin="0" end="3600" vehsPerHour="100"/>
