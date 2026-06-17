@@ -90,20 +90,20 @@ class SimulacionTrafico:
         Este es el dato principal que usa EntornoSemaforo.
         """
         return {
-            "autos_norte":   traci.edge.getLastStepVehicleNumber(EDGES["norte"]),  # Python pregunta: ¿cuántos autos hay en norte_entrada?
+            "autos_norte":   traci.edge.getLastStepVehicleNumber(EDGES["norte"]),
             "autos_sur":     traci.edge.getLastStepVehicleNumber(EDGES["sur"]),
             "autos_este":    traci.edge.getLastStepVehicleNumber(EDGES["este"]),
             "autos_oeste":   traci.edge.getLastStepVehicleNumber(EDGES["oeste"]),
-            "espera_norte":  traci.edge.getWaitingTime(EDGES["norte"]), # Python pregunta: ¿cuántos segundos llevan esperando?
+            "espera_norte":  traci.edge.getWaitingTime(EDGES["norte"]),
             "espera_sur":    traci.edge.getWaitingTime(EDGES["sur"]),
             "espera_este":   traci.edge.getWaitingTime(EDGES["este"]),
             "espera_oeste":  traci.edge.getWaitingTime(EDGES["oeste"]),
-            "filas_norte":   traci.edge.getLastStepHaltingNumber(EDGES["norte"]), # Python pregunta: ¿cuántos están detenidos?
+            "filas_norte":   traci.edge.getLastStepHaltingNumber(EDGES["norte"]),
             "filas_sur":     traci.edge.getLastStepHaltingNumber(EDGES["sur"]),
             "filas_este":    traci.edge.getLastStepHaltingNumber(EDGES["este"]),
             "filas_oeste":   traci.edge.getLastStepHaltingNumber(EDGES["oeste"]),
-            "fase_actual":   traci.trafficlight.getPhase(SEMAFORO_ID), #Python pregunta: ¿en qué fase está el semáforo?
-            "tiempo_fase":   traci.trafficlight.getPhaseDuration(SEMAFORO_ID), #Python pregunta: ¿cuánto lleva en esa fase?
+            "fase_actual":   traci.trafficlight.getPhase(SEMAFORO_ID),
+            "tiempo_fase":   traci.trafficlight.getPhaseDuration(SEMAFORO_ID),
             "espera_total":  self._calcular_espera_total(),
             "filas_total":   self._calcular_filas_total(),
         }
@@ -146,14 +146,14 @@ class SimulacionTrafico:
         tls   = traci.vehicle.getNextTLS(vehicle_id)
 
         return {
-            "velocidad":           traci.vehicle.getSpeed(vehicle_id),  # Python pregunta: ¿a qué velocidad va este auto?
+            "velocidad":           traci.vehicle.getSpeed(vehicle_id),
             "velocidad_max":       traci.vehicle.getMaxSpeed(vehicle_id),
-            "distancia_al_frente": lider[1] if lider else 100.0, # Python pregunta: ¿qué tan lejos está el auto de enfrente?
-            "distancia_semaforo":  tls[0][2] if tls else 100.0,   # Python pregunta: ¿qué tan lejos está el semáforo y de qué color?
-            "semaforo_estado":     tls[0][3] if tls else "G",  # G=verde R=rojo
+            "distancia_al_frente": lider[1] if lider else 100.0,
+            "distancia_semaforo":  tls[0][2] if tls else 100.0,
+            "semaforo_estado":     tls[0][3] if tls else "G",
             "carril_actual":       traci.vehicle.getLaneIndex(vehicle_id),
-            "tiempo_detenido":     traci.vehicle.getWaitingTime(vehicle_id), # Python pregunta: ¿cuánto lleva detenido?
-            "aceleracion":         traci.vehicle.getAcceleration(vehicle_id), # Python pregunta: ¿cuál es su aceleración actual?
+            "tiempo_detenido":     traci.vehicle.getWaitingTime(vehicle_id),
+            "aceleracion":         traci.vehicle.getAcceleration(vehicle_id),
             "posicion":            traci.vehicle.getPosition(vehicle_id),
         }
 
