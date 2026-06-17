@@ -1,0 +1,39 @@
+# ============================================================
+# requirements-prod.txt — Dependencias de producción
+# Incluye todo de requirements.txt + FastAPI
+# ============================================================
+
+# Aprendizaje por Refuerzo (VERSIÓN EXACTA)
+gymnasium==0.29.1
+stable-baselines3==2.3.2
+sb3-contrib==2.3.0
+
+# Deep Learning
+torch
+
+# Simulación de tráfico
+traci==1.19.0
+sumolib==1.19.0
+
+# Datos y métricas
+numpy==1.26.4
+pandas==2.2.1
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+
+# Base de datos
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Configuración
+python-dotenv==1.0.1
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Utilidades
+tqdm==4.66.2
+pytest==8.1.1
