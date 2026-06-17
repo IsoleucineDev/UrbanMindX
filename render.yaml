@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: urbamindx-api
+    env: python
+    region: ohio
+    plan: standard
+    buildCommand: |
+      pip install -r requirements-prod.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: SUMO_HOME
+        value: /usr/share/sumo
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: postgres
+          property: connectionString
+      - key: FRONTEND_URL
+        value: https://urbamindx.vercel.app
+      - key: VERCEL_DOMAIN
+        value: urbamindx.vercel.app
+
+databases:
+  - name: postgres
+    databaseName: urbamindx
+    user: postgres
+    plan: free
