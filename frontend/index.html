@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanMind X - Simulador de Tráfico en Vivo</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .interseccion-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .interseccion-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .interseccion-item.active {
+            border-color: #667eea;
+            background: #e8f0ff;
+            font-weight: 600;
+        }
+        
+        .interseccion-item .nombre {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .interseccion-item .ciudad {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .escenarios {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .escenarios button {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .escenarios button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .btn-iniciar {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-iniciar:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-iniciar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #map {
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            height: 400px;
+        }
+        
+        .metricas {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .metrica-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .metrica-item .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+        
+        .metrica-item .valor {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-top: 5px;
+        }
+        
+        .estado {
+            background: #f0f4ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        .estado.error {
+            background: #ffe0e0;
+            color: #c33;
+        }
+        
+        .estado.success {
+            background: #e0ffe0;
+            color: #3c3;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #ddd;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .tabla-metricas {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .tabla-metricas th,
+        .tabla-metricas td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .tabla-metricas th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .tabla-metricas tr:hover {
+            background: #f8f9fa;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚦 UrbanMind X</h1>
+            <p>Sistema Inteligente de Tráfico en Tiempo Real</p>
+        </div>
+        
+        <div class="content">
+            <div class="sidebar">
+                <div class="card">
+                    <h3>📍 Intersecciones Disponibles</h3>
+                    <div id="listaIntersecciones"></div>
+                </div>
+                
+                <div class="card">
+                    <h3>🎬 Escenario</h3>
+                    <div class="escenarios" id="escenarios"></div>
+                </div>
+                
+                <button class="btn-iniciar" id="btnIniciar">Iniciar Simulación</button>
+                
+                <div id="estadoDiv" class="estado" style="display:none;"></div>
+            </div>
+            
+            <div>
+                <div id="map"></div>
+                <div class="metricas" id="metricas">
+                    <div class="metrica-item">
+                        <div class="label">Espera Promedio</div>
+                        <div class="valor" id="metEspera">—</div>
+                    </div>
+                    <div class="metrica-item">
+                        <div class="label">Fila Máxima</div>
+                        <div class="valor" id="metFila">—</div>
+                    </div>
+                    <div class="metrica-item">
+                        <div class="label">Throughput</div>
+                        <div class="valor" id="metThroughput">—</div>
+                    </div>
+                    <div class="metrica-item">
+                        <div class="label">Velocidad Promedio</div>
+                        <div class="valor" id="metVel">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modalResultados" class="modal">
+        <div class="modal-content">
+            <h2>✅ Simulación Completada</h2>
+            <table class="tabla-metricas" id="tablaResultados"></table>
+            <button class="btn-iniciar" style="margin-top: 20px;" onclick="location.reload()">Nueva Simulación</button>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://urbamindx-api.render.com'; // Cambiar por URL real de Render
+        
+        let mapa = null;
+        let marcadores = {};
+        let interseccionSeleccionada = null;
+        let escenarioSeleccionado = 'normal';
+        let simulacionActiva = false;
+        let wsSimulacion = null;
+        let vehiculosMarcadores = {};
+        
+        // Inicializar
+        async function inicializar() {
+            inicializarMapa();
+            await cargarIntersecciones();
+        }
+        
+        function inicializarMapa() {
+            mapa = L.map('map').setView([19.2878, -99.6547], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+            }).addTo(mapa);
+        }
+        
+        async function cargarIntersecciones() {
+            try {
+                const res = await fetch(`${API_URL}/intersecciones`);
+                const intersecciones = await res.json();
+                
+                const contenedor = document.getElementById('listaIntersecciones');
+                contenedor.innerHTML = '';
+                
+                intersecciones.forEach(inter => {
+                    const item = document.createElement('div');
+                    item.className = 'interseccion-item';
+                    item.innerHTML = `
+                        <div class="nombre">${inter.nombre}</div>
+                        <div class="ciudad">${inter.ciudad}</div>
+                    `;
+                    item.onclick = () => seleccionarInterseccion(inter);
+                    contenedor.appendChild(item);
+                    
+                    // Marcador en mapa
+                    const marcador = L.circleMarker(
+                        [inter.latitud, inter.longitud],
+                        {
+                            radius: 8,
+                            fillColor: '#667eea',
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }
+                    ).addTo(mapa);
+                    
+                    marcador.bindPopup(`<b>${inter.nombre}</b><br>${inter.ciudad}`);
+                    marcadores[inter.id] = marcador;
+                });
+                
+                // Seleccionar primera por defecto
+                if (intersecciones.length > 0) {
+                    seleccionarInterseccion(intersecciones[0]);
+                }
+            } catch (error) {
+                mostrarEstado(`Error cargando intersecciones: ${error.message}`, 'error');
+            }
+        }
+        
+        function seleccionarInterseccion(inter) {
+            interseccionSeleccionada = inter.id;
+            
+            // Actualizar UI
+            document.querySelectorAll('.interseccion-item').forEach((el, i) => {
+                el.classList.remove('active');
+            });
+            event.target.closest('.interseccion-item').classList.add('active');
+            
+            // Actualizar escenarios
+            const escenarios = inter.escenarios_disponibles;
+            const contenedor = document.getElementById('escenarios');
+            contenedor.innerHTML = escenarios.map(esc => 
+                `<button class="${esc === 'normal' ? 'active' : ''}" onclick="seleccionarEscenario('${esc}')">" ${esc.toUpperCase()}</button>`
+            ).join('');
+            escenarioSeleccionado = 'normal';
+            
+            // Centrar mapa
+            mapa.setView([inter.latitud, inter.longitud], 15);
+        }
+        
+        function seleccionarEscenario(esc) {
+            escenarioSeleccionado = esc;
+            document.querySelectorAll('.escenarios button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        async function iniciarSimulacion() {
+            if (!interseccionSeleccionada) {
+                mostrarEstado('Selecciona una intersección', 'error');
+                return;
+            }
+            
+            simulacionActiva = true;
+            document.getElementById('btnIniciar').disabled = true;
+            limpiarMetricas();
+            
+            try {
+                // Crear simulación
+                const res = await fetch(`${API_URL}/simulaciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        interseccion: interseccionSeleccionada,
+                        escenario: escenarioSeleccionado
+                    })
+                });
+                
+                const { id } = await res.json();
+                mostrarEstado(`<span class="spinner"></span>Conectando simulación ${id.slice(0, 8)}...`);
+                
+                // Conectar WebSocket
+                const protocol = API_URL.startsWith('https') ? 'wss' : 'ws';
+                const wsUrl = API_URL.replace(/^https?/, protocol);
+                wsSimulacion = new WebSocket(`${wsUrl}/ws/${id}`);
+                
+                wsSimulacion.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    
+                    if (msg.tipo === 'estado') {
+                        actualizarEstado(msg.data);
+                    } else if (msg.tipo === 'completado') {
+                        mostrarResultados(msg.data);
+                        simulacionActiva = false;
+                    } else if (msg.tipo === 'error') {
+                        mostrarEstado(`Error: ${msg.data.mensaje}`, 'error');
+                        simulacionActiva = false;
+                    }
+                };
+                
+                wsSimulacion.onerror = (error) => {
+                    mostrarEstado('Error de conexión WebSocket', 'error');
+                    simulacionActiva = false;
+                };
+                
+                wsSimulacion.onclose = () => {
+                    if (simulacionActiva) {
+                        mostrarEstado('Simulación cerrada', 'error');
+                    }
+                    simulacionActiva = false;
+                    document.getElementById('btnIniciar').disabled = false;
+                };
+                
+            } catch (error) {
+                mostrarEstado(`Error: ${error.message}`, 'error');
+                simulacionActiva = false;
+                document.getElementById('btnIniciar').disabled = false;
+            }
+        }
+        
+        function actualizarEstado(data) {
+            mostrarEstado(`Paso ${data.paso} | Espera: ${data.espera_total.toFixed(1)}s | Fila: ${data.filas_total}`);
+            
+            document.getElementById('metEspera').textContent = data.espera_total.toFixed(1) + 's';
+            document.getElementById('metFila').textContent = data.filas_total;
+            document.getElementById('metThroughput').textContent = data.velocidad_promedio.toFixed(1);
+            document.getElementById('metVel').textContent = data.velocidad_promedio.toFixed(1) + ' m/s';
+            
+            // Dibujar vehículos (simplificado)
+            limpiarVehiculos();
+            data.vehiculos.forEach(v => {
+                const marker = L.circleMarker(
+                    [19.2878 + (v.x / 10000), -99.6547 + (v.y / 10000)],
+                    { radius: 4, fillColor: '#764ba2', color: '#fff', weight: 1, opacity: 1, fillOpacity: 0.8 }
+                ).addTo(mapa);
+                vehiculosMarcadores[v.id] = marker;
+            });
+        }
+        
+        function mostrarResultados(metricas) {
+            mostrarEstado('✅ ¡Simulación completada!', 'success');
+            
+            const tabla = document.getElementById('tablaResultados');
+            tabla.innerHTML = `
+                <tr>
+                    <th>Métrica</th>
+                    <th>Valor</th>
+                </tr>
+                <tr>
+                    <td>Espera Promedio</td>
+                    <td>${metricas.espera_promedio?.toFixed(2) || '—'} s</td>
+                </tr>
+                <tr>
+                    <td>Fila Máxima</td>
+                    <td>${metricas.fila_maxima || '—'} vehículos</td>
+                </tr>
+                <tr>
+                    <td>Throughput</td>
+                    <td>${metricas.throughput || '—'} vehículos</td>
+                </tr>
+                <tr>
+                    <td>Velocidad Promedio</td>
+                    <td>${metricas.velocidad_promedio?.toFixed(2) || '—'} m/s</td>
+                </tr>
+                <tr>
+                    <td>Mejora Porcentual</td>
+                    <td>${metricas.mejora_porcentual?.toFixed(1) || '—'}%</td>
+                </tr>
+            `;
+            
+            document.getElementById('modalResultados').classList.add('active');
+        }
+        
+        function mostrarEstado(mensaje, tipo = 'info') {
+            const div = document.getElementById('estadoDiv');
+            div.textContent = mensaje;
+            div.className = `estado ${tipo}`;
+            div.style.display = 'block';
+        }
+        
+        function limpiarMetricas() {
+            document.getElementById('metEspera').textContent = '—';
+            document.getElementById('metFila').textContent = '—';
+            document.getElementById('metThroughput').textContent = '—';
+            document.getElementById('metVel').textContent = '—';
+        }
+        
+        function limpiarVehiculos() {
+            Object.values(vehiculosMarcadores).forEach(m => mapa.removeLayer(m));
+            vehiculosMarcadores = {};
+        }
+        
+        document.getElementById('btnIniciar').onclick = iniciarSimulacion;
+        
+        inicializar();
+    </script>
+</body>
+</html>
