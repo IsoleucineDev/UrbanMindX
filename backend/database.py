@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 # Base para los modelos
 Base = declarative_base()
 
-# Motor async
+# Motor async - Usar postgresql+asyncpg para async driver
 engine = create_async_engine(
-    settings.database_url,
+    settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
     echo=settings.debug,
     pool_pre_ping=True,
     pool_size=10,
